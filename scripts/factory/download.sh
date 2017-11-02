@@ -14,3 +14,7 @@ if [ "$1" == "741" ]; then
     wget -c https://canaan.io/downloads/software/avalon741/mm/latest/MM741.mcs -O MM741.mcs.orig && mv MM741.mcs.orig MM741.mcs
     wget -c https://canaan.io/downloads/software/avalon741/pmu/latest/pmu741.axf -O pmu741.axf.orig  && mv pmu741.axf.orig pmu741.axf
 fi
+
+if [ "$1" == "AUC3" ]; then
+    wget -c https://canaan.io/downloads/software/avalon6/auc2/2015-12-08/avalon-usb-converter.axf -O AUC3.axf.orig && mv AUC3.axf.orig AUC3.axf
+fi

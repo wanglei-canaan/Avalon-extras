@@ -11,6 +11,9 @@ PLATFORM ?= MM721
 # PMU: pmu721, pmu741, pmu821
 PMU ?= pmu721
 
+# AUC: AUC3
+AUC ?= AUC3
+
 BATCHFILE	:= $(shell mktemp)
 isedir  ?= /home/Xilinx/14.6/ISE_DS
 xil_env ?= . $(isedir)/settings$(shell getconf LONG_BIT).sh &>/dev/null
@@ -68,6 +71,9 @@ endif
 	@rm -f $(BATCHFILE)
 
 reflash_ulink2: $(PMU).axf erase_ulink2
+	(while ! (sleep 0.5 && $(LPCXPRESSODIR)/crt_emu_cm_redlink -flash-load-exec $< $(NXP_PARAMETERS)); do : ; done;)
+
+reflash_auc: $(AUC).axf erase_ulink2
 	(while ! (sleep 0.5 && $(LPCXPRESSODIR)/crt_emu_cm_redlink -flash-load-exec $< $(NXP_PARAMETERS)); do : ; done;)
 
 erase_ulink2:
