@@ -29,8 +29,8 @@ SCRIPT_VERSION=20180223
 avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
-avalon7_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
-avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+avalon7_owrepo="git://github.com/openwrt/openwrt.git@a789c0f4"
+avalon8_owrepo="git://github.com/openwrt/openwrt.git@a789c0f4"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -39,9 +39,9 @@ avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 [ "${FEATURE}" == "bitcoind" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/bitcoind/cgminer/data/feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
-rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3")
-rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
-rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
+rpi3_modelb_brdcfg=("bcm2710" "config.${AVA_MACHINE}.rpi3")
+rpi2_modelb_brdcfg=("bcm2709" "config.${AVA_MACHINE}.rpi2")
+rpi1_modelb_brdcfg=("bcm2708" "config.${AVA_MACHINE}.raspberry-pi")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
 wrt1200ac_brdcfg=("mvebu" "config.${AVA_MACHINE}.wrt1200ac")
@@ -196,7 +196,7 @@ build_cgminer() {
         eval AVA_TARGET_PLATFORM=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[0]}
         cd ..
         mkdir -p ./bin/${AVA_TARGET_BOARD}
-        cp ./openwrt/bin/${AVA_TARGET_PLATFORM}/packages/cgminer/cgminer*.ipk  ./bin/${AVA_TARGET_BOARD}
+        cp ./openwrt/bin/targets/brcm2708/${AVA_TARGET_PLATFORM}/packages/cgminer/cgminer*.ipk  ./bin/${AVA_TARGET_BOARD}
     fi
 }
 
@@ -204,7 +204,7 @@ do_release() {
     cd ${ROOT_DIR}
     eval AVA_TARGET_PLATFORM=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[0]}
     mkdir -p ./bin/${DATE}/${AVA_TARGET_BOARD}/
-    cp -a ./openwrt/bin/${AVA_TARGET_PLATFORM}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
+    cp -a ./openwrt/bin/targets/brcm2708/${AVA_TARGET_PLATFORM}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
 }
 
 cleanup() {
