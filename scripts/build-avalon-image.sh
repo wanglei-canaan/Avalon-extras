@@ -1,6 +1,7 @@
 #!/bin/bash
 # This is a script for build avalon controller image
 #
+#  Copyright 2017-2018 Zhenxing Xu <xuzhenxing@canaan-creative.com>
 #  Copyright 2017 Yangjun <yangjun@canaan-creative.com>
 #  Copyright 2014-2017 Mikeqin <Fengling.Qin@gmail.com>
 #  Copyright 2012-2015 Xiangfu <xiangfu@openmobilefree.com>
@@ -14,7 +15,7 @@
 # Learn bash: http://explainshell.com/
 set -e
 
-SCRIPT_VERSION=20180223
+SCRIPT_VERSION=20180525
 
 # Support machine: avalon6, avalon4, abc, avalon7, avalon8
 [ -z "${AVA_MACHINE}" ] && AVA_MACHINE=avalon6
@@ -30,7 +31,7 @@ avalon4_owrepo="svn://svn.openwrt.org/openwrt/trunk@43076"
 avalon6_owrepo="git://git.openwrt.org/openwrt.git@cac971da"
 abc_owrepo="git://git.openwrt.org/openwrt.git"
 avalon7_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
-avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
+avalon8_owrepo="git://github.com/openwrt/openwrt.git@a789c0f4"
 
 # OpenWrt feeds, features: NULL(Default), NiceHash, DHCP, bitcoind
 [ -z "${FEATURE}" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/master/cgminer/data/feeds.${AVA_MACHINE}.conf
@@ -39,9 +40,9 @@ avalon8_owrepo="git://github.com/Canaan-Creative/openwrt-archive.git"
 [ "${FEATURE}" == "bitcoind" ] && FEEDS_CONF_URL=https://raw.github.com/Canaan-Creative/cgminer-openwrt-packages/bitcoind/cgminer/data/feeds.${AVA_MACHINE}.conf
 
 # Board config: target(get it in the OpenWrt bin), config
-rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3")
-rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2")
-rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi")
+rpi3_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi3" "bcm2710")
+rpi2_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.rpi2" "bcm2709")
+rpi1_modelb_brdcfg=("brcm2708" "config.${AVA_MACHINE}.raspberry-pi" "bcm2708")
 tl_wr703n_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.703n")
 tl_mr3020_v1_brdcfg=("ar71xx" "config.${AVA_MACHINE}.mr3020")
 wrt1200ac_brdcfg=("mvebu" "config.${AVA_MACHINE}.wrt1200ac")
@@ -196,7 +197,12 @@ build_cgminer() {
         eval AVA_TARGET_PLATFORM=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[0]}
         cd ..
         mkdir -p ./bin/${AVA_TARGET_BOARD}
-        cp ./openwrt/bin/${AVA_TARGET_PLATFORM}/packages/cgminer/cgminer*.ipk  ./bin/${AVA_TARGET_BOARD}
+        if [ "$AVA_MACHINE" == "avalon8" ]; then
+            eval AVA_TARGET_SERIES=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[2]}
+            cp ./openwrt/bin/targets/${AVA_TARGET_PLATFORM}/${AVA_TARGET_SERIES}/packages/cgminer/cgminer*.ipk  ./bin/${AVA_TARGET_BOARD}
+        else
+            cp ./openwrt/bin/${AVA_TARGET_PLATFORM}/packages/cgminer/cgminer*.ipk  ./bin/${AVA_TARGET_BOARD}
+        fi
     fi
 }
 
@@ -204,7 +210,12 @@ do_release() {
     cd ${ROOT_DIR}
     eval AVA_TARGET_PLATFORM=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[0]}
     mkdir -p ./bin/${DATE}/${AVA_TARGET_BOARD}/
-    cp -a ./openwrt/bin/${AVA_TARGET_PLATFORM}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
+    if [ "$AVA_MACHINE" == "avalon8" ]; then
+        eval AVA_TARGET_SERIES=\${"`echo ${AVA_TARGET_BOARD//-/_}`"_brdcfg[2]}
+        cp -a ./openwrt/bin/targets/${AVA_TARGET_PLATFORM}/${AVA_TARGET_SERIES}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
+    else
+        cp -a ./openwrt/bin/${AVA_TARGET_PLATFORM}/* ./bin/${DATE}/${AVA_TARGET_BOARD}/
+    fi
 }
 
 cleanup() {
