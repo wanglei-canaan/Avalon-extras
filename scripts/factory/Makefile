@@ -8,13 +8,15 @@
 # MM_PLATFORM: MM721, MM741, MM821, MM841, MM851
 MM_PLATFORM ?= MM721
 
-# MCU_PLATFORM: pmu721, pmu741, pmu821, auc2, auc3
+# MCU_PLATFORM: pmu721, pmu741, pmu821, pmu921, auc2, auc3
 MCU_PLATFORM ?= pmu721
 
 BATCHFILE	:= $(shell mktemp)
 isedir  ?= /home/Xilinx/14.6/ISE_DS
 xil_env ?= . $(isedir)/settings$(shell getconf LONG_BIT).sh &>/dev/null
 ifeq ($(MCU_PLATFORM),pmu821)
+    NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC824 -wire=winUSB -s50 -flash-driver=LPC800_32.cfx
+else ifeq ($(MCU_PLATFORM),pmu921)
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC824 -wire=winUSB -s50 -flash-driver=LPC800_32.cfx
 else
     NXP_PARAMETERS = -g -2 -vendor=NXP -pLPC11U14/201 -wire=winUSB -s50 -flash-driver=LPC11_12_13_32K_4K.cfx
