@@ -6,6 +6,14 @@ import json
 
 import config
 
+result = {
+    'success': 0,
+    'burn_failed': -1,
+    'burn_light_failed': -2,
+    'test_failed': -3,
+    'test_light_failed': 4,
+}
+
 
 def get_valid_file():
     path = config.config['data_dir']
@@ -28,15 +36,12 @@ def write_data(data):
     file.close()
 
 
-def save_data(dna, ver, type, result):
-    enter = raw_input("\033[1;33m如果正常请扫码，不正常请直接回车\033[0m")
-    if len(enter) == 0:
-        return
-    data = {'dna': dna, 'qcode': enter, 'ver': ver, 'type': type, 'timestamp': int(time.time()), 'result': result}
+def save_data(dna, qcode, chip, ver, type, result):
+    data = {'dna': dna, 'qcode': qcode, 'chip': chip, 'ver': ver, 'type': type, 'timestamp': int(time.time()), 'result': result}
     write_data(data)
 
 
 if __name__ == '__main__':
     while True:
-        save_data('123', '8C', 'PMU851', 1)
+        save_data('123', 'xxx', 'mm', '8C', 'PMU851', 1)
         time.sleep(2)

@@ -395,35 +395,46 @@ if __name__ == '__main__':
     pmu_type = sys.argv[2]
 
     while (True):
+        dna = ''
+        qcode = ''
+        ver = ''
         if parser.is_rig == '0':
             # Step 1: Burn PMU
             burn = burn_pmu(pmu_type) # Burn status: 0, normal; 1, leds error; 2, burn failed
+            dna = PMU_DNA
+            ver = PMU_VER
             if (burn == 0):
                 # Step 2: Test PMU
                 test = test_pmu(pmu_type) # Test status: 0, normal; 1, leds error; 2, test failed
                 if (test == 0):
                     # Step 3: Save PMU board messages
-                    save_chip_data.save_data(PMU_DNA, PMU_VER, pmu_type, test)
+                    while len(qcode) != 12:
+                        qcode = raw_input("\033[1;33m请扫码\033[0m")
+                    save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['success'])
                     while (True):
                         key = raw_input("\033[1;33m请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
                             break
                 elif (test == 1):
+                    save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['test_light_failed'])
                     while (True):
                         key = raw_input("\033[1;33m点红灯失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
                             break
                 elif (test == 2):
+                    save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['test_failed'])
                     while (True):
                         key = raw_input("\033[1;33m测试失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
                             break
             elif (burn == 1):
+                save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['burn_light_failed'])
                 while (True):
                     key = raw_input("\033[1;33m点绿灯失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                     if (len(key) == 0):
                         break
             elif (burn == 2):
+                save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['burn_failed'])
                 while (True):
                     key = raw_input("\033[1;33m烧写失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                     if (len(key) == 0):
