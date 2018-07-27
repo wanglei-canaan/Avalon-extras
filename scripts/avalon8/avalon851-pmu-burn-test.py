@@ -11,6 +11,8 @@ import time
 import math
 import subprocess
 
+import save_chip_data
+
 parser = argparse.ArgumentParser(description="Avalon851 PMU test script.")
 parser.add_argument("-s", action='store', dest="serial_port", default="/dev/ttyUSB0", help='Serial port')
 parser.add_argument("-c", action='store', dest="is_rig", default="0", help='0 Is For Rig Testing, 1 Is For Test Polling')
@@ -112,6 +114,7 @@ def detect_version():
     global PMU_LED
     global PMU_PG
     global PMU_DNA
+    global PMU_VER
 
     input_str = mm_package("10", module_id = None)
     ser.flushInput()
@@ -387,6 +390,7 @@ if __name__ == '__main__':
                         test = test_pmu()
                         if (test):
                             print("\033[1;33m请检测是否亮红灯, 红灯为正常\033[0m\n")
+                            save_chip_data.save_data(PMU_DNA, PMU_VER, PMU_TYPE, test)
                         break
                 while (True):
                     enter = raw_input("\033[1;33m请按回车键继续进行PMU烧写和测试: \033[0m")
