@@ -31,6 +31,8 @@ import sys
 import time
 import os
 
+import save_chip_data
+
 auc_vid = 0x29f1
 auc_pid = 0x33f2
 TYPE_DETECT = "10"
@@ -234,6 +236,7 @@ if __name__ == '__main__':
                     ret = test_mm(usbdev, endpin, endpout, mm_type)
                     if (ret):
                         print("\033[1;32m%s\033[0m" % (mm_type + " test pass"))
+                        save_chip_data.save_data(MM_DNA, '', mm_type, ret)
                     else:
                         show_error()
 
