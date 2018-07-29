@@ -10,10 +10,9 @@ import sys
 import time
 import math
 import subprocess
-
 import save_chip_data
 
-parser = argparse.ArgumentParser(description="Avalon851 PMU test script.")
+parser = argparse.ArgumentParser(description="Avalon8 PMU test script.")
 parser.add_argument("-s", action='store', dest="serial_port", default="/dev/ttyUSB0", help='Serial port')
 parser.add_argument("-c", action='store', dest="is_rig", default="0", help='0 Is For Rig Testing, 1 Is For Test Polling')
 parser = parser.parse_args()
@@ -24,17 +23,16 @@ try:
 except Exception as e:
     print str(e)
 
+PMU841_TYPE = ( 'PMU841' )
 PMU851_TYPE = ( 'PMU851' )
-
-PMU851_VER = ( '8C' )
-
-PMU851_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
-
-PMU851_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
-
+PMU8_VER = ( '8C' )
+PMU8_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
+PMU8_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
 # ntc: check the table(Thick Film Chip NTC Thermistor Devices_CMFA103J3500HANT.pdf)
 # v12_l/h(Vin) equation: x * 3.3 / 4095 = (11~14) * 5.62 / 25.62
-# vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.2~8.7) * 20 / 72.3
+# PMU841: vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.49 * (1 +/-2%)) * 20 / 63
+# PMU851: vcore_l/h(Vout) equation: x * 3.3 / 4095 = (8.97 * (1 -/+2%)) * 20 / 72.3
+PMU841_ADC = { 'ntc_l': 524, 'ntc_h': 9615, 'v12_l':2994, 'v12_h': 3810, 'vcore_l': 3230, 'vcore_h': 3427}
 PMU851_ADC = { 'ntc_l': 524, 'ntc_h': 9615, 'v12_l':2994, 'v12_h': 3810, 'vcore_l': 3020, 'vcore_h': 3158}
 
 error_message = {
@@ -108,7 +106,7 @@ h: Help\n\
 4: Get    The PMU State\n\
 q: Quit\n")
 
-def detect_version():
+def detect_version(pmu_type):
     global PMU_TYPE
     global PMU_ADC
     global PMU_LED
@@ -124,12 +122,16 @@ def detect_version():
         print (error_message['serial_port'])
         return False
     PMU_DNA = binascii.hexlify(res[6:14])
-    if res[14:16] == PMU851_VER:
-        PMU_TYPE = PMU851_TYPE
+    if res[14:16] == PMU8_VER:
         PMU_VER = res[14:29]
-        PMU_ADC = PMU851_ADC
-        PMU_LED = PMU851_LED
-        PMU_PG  = PMU851_PG
+        PMU_LED = PMU8_LED
+        PMU_PG  = PMU8_PG
+        if (pmu_type == 'PMU841'):
+            PMU_TYPE = PMU841_TYPE
+            PMU_ADC = PMU841_ADC
+        elif (pmu_type == 'PMU851'):
+            PMU_TYPE = PMU851_TYPE
+            PMU_ADC = PMU851_ADC
     else:
         print(res[14:29])
         print("Invalid PMU version")
@@ -308,7 +310,7 @@ def get_state():
             print("LED2:   " + pmu_led_state.get(pmu_led_state_key[index]))
     return True
 
-def test_polling():
+def test_polling(pmu_type):
     while (True):
         h = raw_input("Please input(1-4), h for help:")
         if (h == 'h') or (h == 'H'):
@@ -316,7 +318,7 @@ def test_polling():
         elif (h == 'q') or (h == 'Q'):
             sys.exit(0)
         elif h == '1':
-            detect_version()
+            detect_version(pmu_type)
         elif h == '2':
             vol = raw_input("Please input the voltage:")
             set_vol_value(vol)
@@ -346,60 +348,85 @@ def show_ok():
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
     print("\n")
-    print("\033[1;32mPMU烧写完成\033[0m")
+    print("\033[1;32m%s烧写完成\033[0m" % pmu_type)
     print("\n")
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
 
-def burn_pmu():
+def burn_pmu(pmu_type):
+    # PMU821, PMU841, PMU851 firmware is the same
     ret = subprocess.call("make -C /home/factory/Avalon-extras/scripts/factory reflash_ulink2 MCU_PLATFORM=pmu821", shell=True)
     if (ret != 0):
         show_error()
-        return 0
+        return 2
     else:
-        show_ok()
+        show_ok(pmu_type)
         time.sleep(1)
-        return 1
 
-def test_pmu():
+        set_led_state("000101010101") # Light Green leds
+        print("\033[1;33m请检测是否亮绿灯, 绿灯为正常, 否则不正常\033[0m")
+        while (True):
+            key = raw_input("\033[1;33m如点灯正常请输入空格继续PMU测试，否则请输入0键并回车退出PMU测试: \033[0m")
+            if (key == '0'):
+                return 1
+            elif (key.isspace()):
+                return 0
+
+def test_pmu(pmu_type):
     set_led_state("000000010000")
     set_vol_value("008088018088")
-    if detect_version() == False:
+    if detect_version(pmu_type) == False:
         sys.exit(0)
     # Wait 3 seconds at least for power good
     time.sleep(3)
     if get_result() == False:
         show_error()
-        return 0
+        return 2
     else:
-        set_led_state("000202010202")
-        print("\033[1;32m%s\033[0m" % (PMU_TYPE + " test pass"))
+        set_vol_value("000000010000") # Close output voltage
+        print("\033[1;32m%s\033[0m" % (pmu_type + " test pass"))
 
-    set_vol_value("000000010000")
-    return 1
+        set_led_state("000202010202") # Light Red leds
+        print("\033[1;33m请检测是否亮红灯, 红灯为正常, 否则不正常\033[0m\n")
+        while (True):
+            key = raw_input("\033[1;33m如点灯正常请输入空格继续PMU数据保存，否则请输入0键并回车退出PMU数据保存: \033[0m")
+            if (key == '0'):
+                return 1
+            elif (key.isspace()):
+                return 0
 
 if __name__ == '__main__':
+    pmu_type = sys.argv[1]
+
     while (True):
         if parser.is_rig == '0':
-            if (burn_pmu() == 1):
-                set_led_state("000101010101")
-                print("\033[1;33m请检测是否亮绿灯, 绿灯为正常\033[0m")
+            # Step 1: Burn PMU
+            ret_b = burn_pmu(pmu_type) # Burn status: 0, normal; 1, leds error; 2, burn failed
+            if (ret_b == 0):
+                # Step 2: Test PMU
+                ret_t = test_pmu() # Test status: 0, normal; 1, leds error; 2, test failed
+                if (ret_t == 0):
+                    # Step 3: Save PMU board messages
+                    save_chip_data.save_data(PMU_DNA, PMU_VER, PMU_TYPE, test)
+                elif (ret_t == 1):
+                    while (True):
+                        key = raw_input("\033[1;33m%s点红灯失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                        if (len(key) == 0):
+                            break
+                elif (ret_b == 2):
+                    while (True):
+                        key = raw_input("\033[1;33m%s测试失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                        if (len(key) == 0):
+                            break
+            elif (ret_b == 1):
                 while (True):
-                    space_key = raw_input("\033[1;33m请输入空格键并回车进行PMU测试: \033[0m")
-                    if (space_key.isspace()):
-                        test = test_pmu()
-                        if (test):
-                            print("\033[1;33m请检测是否亮红灯, 红灯为正常\033[0m\n")
-                            save_chip_data.save_data(PMU_DNA, PMU_VER, PMU_TYPE, test)
+                    key = raw_input("\033[1;33m%s点绿灯失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                    if (len(key) == 0):
                         break
+            elif (ret_b == 2):
                 while (True):
-                    enter = raw_input("\033[1;33m请按回车键继续进行PMU烧写和测试: \033[0m")
-                    if (len(enter) == 0):
-                        break
-            else:
-                while (True):
-                    zero = raw_input("\033[1;33m请输入0键并回车继续测试: \033[0m")
-                    if (zero == '0'):
+                    key = raw_input("\033[1;33m%s烧写失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                    if (len(key) == 0):
                         break
         elif parser.is_rig == '1':
             test_polling()
