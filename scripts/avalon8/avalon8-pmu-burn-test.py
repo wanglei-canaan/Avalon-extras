@@ -366,7 +366,7 @@ def burn_pmu(pmu_type):
         set_led_state("000101010101") # Light Green leds
         print("\033[1;33m请检测是否亮绿灯, 绿灯为正常, 否则不正常\033[0m")
         while (True):
-            key = raw_input("\033[1;33m如点灯正常请输入空格继续PMU测试，否则请输入0键并回车退出PMU测试: \033[0m")
+            key = raw_input("\033[1;33m如点灯正常请输入空格继续%s测试，否则请输入0键并回车退出测试: \033[0m" % pmu_type)
             if (key == '0'):
                 return 1
             elif (key.isspace()):
@@ -389,7 +389,7 @@ def test_pmu(pmu_type):
         set_led_state("000202010202") # Light Red leds
         print("\033[1;33m请检测是否亮红灯, 红灯为正常, 否则不正常\033[0m\n")
         while (True):
-            key = raw_input("\033[1;33m如点灯正常请输入空格继续PMU数据保存，否则请输入0键并回车退出PMU数据保存: \033[0m")
+            key = raw_input("\033[1;33m如点灯正常请输入空格继续%s数据保存，否则请输入0键并回车退出数据保存: \033[0m" % pmu_type)
             if (key == '0'):
                 return 1
             elif (key.isspace()):
@@ -401,31 +401,35 @@ if __name__ == '__main__':
     while (True):
         if parser.is_rig == '0':
             # Step 1: Burn PMU
-            ret_b = burn_pmu(pmu_type) # Burn status: 0, normal; 1, leds error; 2, burn failed
-            if (ret_b == 0):
+            burn = burn_pmu(pmu_type) # Burn status: 0, normal; 1, leds error; 2, burn failed
+            if (burn == 0):
                 # Step 2: Test PMU
-                ret_t = test_pmu() # Test status: 0, normal; 1, leds error; 2, test failed
-                if (ret_t == 0):
+                test = test_pmu(pmu_type) # Test status: 0, normal; 1, leds error; 2, test failed
+                if (test == 0):
                     # Step 3: Save PMU board messages
                     save_chip_data.save_data(PMU_DNA, PMU_VER, PMU_TYPE, test)
-                elif (ret_t == 1):
                     while (True):
-                        key = raw_input("\033[1;33m%s点红灯失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                        key = raw_input("\033[1;33m请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
                             break
-                elif (ret_b == 2):
+                elif (test == 1):
                     while (True):
-                        key = raw_input("\033[1;33m%s测试失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                        key = raw_input("\033[1;33m点红灯失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
                             break
-            elif (ret_b == 1):
+                elif (test == 2):
+                    while (True):
+                        key = raw_input("\033[1;33m测试失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
+                        if (len(key) == 0):
+                            break
+            elif (burn == 1):
                 while (True):
-                    key = raw_input("\033[1;33m%s点绿灯失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                    key = raw_input("\033[1;33m点绿灯失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                     if (len(key) == 0):
                         break
-            elif (ret_b == 2):
+            elif (burn == 2):
                 while (True):
-                    key = raw_input("\033[1;33m%s烧写失败，请输入回车键继续PMU烧写和测试: \033[0m" % pmu_type)
+                    key = raw_input("\033[1;33m烧写失败，请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                     if (len(key) == 0):
                         break
         elif parser.is_rig == '1':
