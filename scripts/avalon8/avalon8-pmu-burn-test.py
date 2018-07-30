@@ -15,6 +15,7 @@ import save_chip_data
 parser = argparse.ArgumentParser(description="Avalon8 PMU test script.")
 parser.add_argument("-s", action='store', dest="serial_port", default="/dev/ttyUSB0", help='Serial port')
 parser.add_argument("-c", action='store', dest="is_rig", default="0", help='0 Is For Rig Testing, 1 Is For Test Polling')
+parser.add_argument("-t", action='store', dest="pmu_type", default="PMU851", help='PMU type')
 parser = parser.parse_args()
 
 ser = None
@@ -23,8 +24,6 @@ try:
 except Exception as e:
     print str(e)
 
-PMU841_TYPE = ( 'PMU841' )
-PMU851_TYPE = ( 'PMU851' )
 PMU8_VER = ( '8C' )
 PMU8_PG  = { 'pg_good': '0001', 'pg_bad': '0002' }
 PMU8_LED = { 'led_close': '0000', 'led_green': '0001', 'led_red': '0002' }
@@ -107,7 +106,6 @@ h: Help\n\
 q: Quit\n")
 
 def detect_version(pmu_type):
-    global PMU_TYPE
     global PMU_ADC
     global PMU_LED
     global PMU_PG
@@ -127,18 +125,16 @@ def detect_version(pmu_type):
         PMU_LED = PMU8_LED
         PMU_PG  = PMU8_PG
         if (pmu_type == 'PMU841'):
-            PMU_TYPE = PMU841_TYPE
             PMU_ADC = PMU841_ADC
         elif (pmu_type == 'PMU851'):
-            PMU_TYPE = PMU851_TYPE
             PMU_ADC = PMU851_ADC
     else:
         print(res[14:29])
         print("Invalid PMU version")
         return False
 
-    print(PMU_TYPE + " VER:" + PMU_VER)
-    print(PMU_TYPE + " DNA:" + PMU_DNA)
+    print(pmu_type + " VER:" + PMU_VER)
+    print(pmu_type + " DNA:" + PMU_DNA)
     return True
 
 def judge_vol_range(vol):
@@ -344,7 +340,7 @@ def show_error():
     print("\033[1;31m--------------------------------------------------------------------------------------\033[0m")
     print("\n\n")
 
-def show_ok():
+def show_ok(pmu_type):
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
     print("\033[1;32m--------------------------------------------------------------------------------------\033[0m")
     print("\n")
@@ -387,7 +383,7 @@ def test_pmu(pmu_type):
         print("\033[1;32m%s\033[0m" % (pmu_type + " test pass"))
 
         set_led_state("000202010202") # Light Red leds
-        print("\033[1;33m请检测是否亮红灯, 红灯为正常, 否则不正常\033[0m\n")
+        print("\033[1;33m请检测是否亮红灯, 红灯为正常, 否则不正常\033[0m")
         while (True):
             key = raw_input("\033[1;33m如点灯正常请输入空格继续%s数据保存，否则请输入0键并回车退出数据保存: \033[0m" % pmu_type)
             if (key == '0'):
@@ -396,7 +392,7 @@ def test_pmu(pmu_type):
                 return 0
 
 if __name__ == '__main__':
-    pmu_type = sys.argv[1]
+    pmu_type = sys.argv[2]
 
     while (True):
         if parser.is_rig == '0':
@@ -407,7 +403,7 @@ if __name__ == '__main__':
                 test = test_pmu(pmu_type) # Test status: 0, normal; 1, leds error; 2, test failed
                 if (test == 0):
                     # Step 3: Save PMU board messages
-                    save_chip_data.save_data(PMU_DNA, PMU_VER, PMU_TYPE, test)
+                    save_chip_data.save_data(PMU_DNA, PMU_VER, pmu_type, test)
                     while (True):
                         key = raw_input("\033[1;33m请输入回车键继续%s烧写、测试和扫描: \033[0m" % pmu_type)
                         if (len(key) == 0):
