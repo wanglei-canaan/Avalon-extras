@@ -171,9 +171,9 @@ def show_ok(mm_type):
 
 def burn_mm(mm_type):
     if (mm_type == 'MM841'):
-        ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM841")
+        ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/factory/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM841")
     elif (mm_type == 'MM851'):
-        ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM851")
+        ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/factory/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM851")
 
     if (ret):
         show_error()
@@ -245,7 +245,7 @@ if __name__ == '__main__':
                 # Step 3: Save datas
                 dna = MM_DNA
                 ver = MM_VER
-                while len(qcode) != 12:
+                while len(qcode) != 13:
                     qcode = raw_input("\033[1;33m请扫码\033[0m")
                 save_chip_data.save_data(dna, qcode, 'mm', ver, mm_type, save_chip_data.result['success'])
                 while (True):

@@ -401,14 +401,14 @@ if __name__ == '__main__':
         if parser.is_rig == '0':
             # Step 1: Burn PMU
             burn = burn_pmu(pmu_type) # Burn status: 0, normal; 1, leds error; 2, burn failed
-            dna = PMU_DNA
-            ver = PMU_VER
             if (burn == 0):
                 # Step 2: Test PMU
                 test = test_pmu(pmu_type) # Test status: 0, normal; 1, leds error; 2, test failed
+            	dna = PMU_DNA
+            	ver = PMU_VER
                 if (test == 0):
                     # Step 3: Save PMU board messages
-                    while len(qcode) != 12:
+                    while len(qcode) != 13:
                         qcode = raw_input("\033[1;33m请扫码\033[0m")
                     save_chip_data.save_data(dna, qcode, 'pmu', ver, pmu_type, save_chip_data.result['success'])
                     while (True):
