@@ -11,7 +11,7 @@ result = {
     'burn_failed': -1,
     'burn_light_failed': -2,
     'test_failed': -3,
-    'test_light_failed': 4,
+    'test_light_failed': -4,
 }
 
 

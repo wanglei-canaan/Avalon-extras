@@ -235,17 +235,25 @@ if __name__ == '__main__':
 
     # MM burn, test and save datas
     while (True):
+        dna = ''
+        qcode = ''
+        ver = ''
         # Step 1: MM burn
         if (burn_mm(mm_type)):
             # Step 2: MM test
             if (test_mm(usbdev, endpin, endpout, mm_type)):
                 # Step 3: Save datas
-                save_chip_data.save_data(MM_DNA, MM_VER, mm_type, 0)
+                dna = MM_DNA
+                ver = MM_VER
+                while len(qcode) != 12:
+                    qcode = raw_input("\033[1;33m请扫码\033[0m")
+                save_chip_data.save_data(dna, qcode, 'mm', ver, mm_type, save_chip_data.result['success'])
                 while (True):
                     key = raw_input("\033[1;33m请按回车键继续进行%s烧写、测试和扫码: \033[0m" % mm_type)
                     if (len(key) == 0):
                         break
             else:
+                save_chip_data.save_data(dna, qcode, 'mm', ver, mm_type, save_chip_data.result['test_failed'])
                 show_error()
                 while (True):
                     key = raw_input("\033[1;33m测试失败，请输入回车键继续%s烧写、测试和扫码: \033[0m" % mm_type)
