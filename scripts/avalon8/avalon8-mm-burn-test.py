@@ -143,8 +143,9 @@ def run_detect(usbdev, endpin, endpout, cmd):
     if not res_s:
         return None
     else:
+        ver = ''.join([chr(x) for x in res_s])[DATA_OFFSET+8:DATA_OFFSET+23]
         dna = res_s[DATA_OFFSET+0:DATA_OFFSET+8]
-        return list(dna)
+        return ver, list(dna)
 
 def show_error():
     print("\n\n")
@@ -173,26 +174,30 @@ def burn_mm(mm_type):
         ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM841")
     elif (mm_type == 'MM851'):
         ret = os.system("make -C /home/factory/Avalon-extras/scripts/factory isedir=/home/Xilinx/14.6/ISE_DS reflash MM_PLATFORM=MM851")
-    else:
-        print("MM type: %s" % mm_type)
-        ret = 1
 
-    if (ret != 0):
+    if (ret):
         show_error()
-        return 0
+        return False
     else:
         show_ok(mm_type)
         time.sleep(10)
-        return 1
+
+        while (True):
+            print("\033[1;31m请等待黄灯亮后再进行测试! \033[0m")
+            space_key = raw_input("\033[1;33m请输入空格键并回车进行%s测试: \033[0m" % mm_type)
+            if (space_key.isspace()):
+                return True
 
 def test_mm(usbdev, endpin, endpout, mm_type):
     global MM_DNA
+    global MM_VER
 
-    tmp = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT))
+    ver, tmp = run_detect(usbdev, endpin, endpout, mm_package(TYPE_DETECT))
     if tmp is None:
         print("Something is wrong or modular id not correct")
-        return 0
+        return False
 
+    MM_VER = ver
     dna = '{:x}'.format(tmp[0]) + \
             '{:x}'.format(tmp[1]) + \
             '{:x}'.format(tmp[2]) + \
@@ -201,10 +206,12 @@ def test_mm(usbdev, endpin, endpout, mm_type):
             '{:x}'.format(tmp[5]) + \
             '{:x}'.format(tmp[6]) + \
             '{:x}'.format(tmp[7])
-
     MM_DNA = dna.zfill(16)
+
+    print("%s VER: %s" % (mm_type, MM_VER))
     print("%s DNA: %s" % (mm_type, MM_DNA))
-    return 1
+    print("\033[1;32m%s\033[0m" % (mm_type + " test pass"))
+    return True
 
 if __name__ == '__main__':
     mm_type = sys.argv[1]
@@ -226,27 +233,26 @@ if __name__ == '__main__':
     except:
         sys.exit(1)
 
-    # MM burn and test
+    # MM burn, test and save datas
     while (True):
-        if (burn_mm(mm_type) == 1):
-            while (True):
-                print("\033[1;31m请等待黄灯亮后再进行测试! \033[0m")
-                space_key = raw_input("\033[1;33m请输入空格键并回车进行MM测试: \033[0m")
-                if (space_key.isspace()):
-                    ret = test_mm(usbdev, endpin, endpout, mm_type)
-                    if (ret):
-                        print("\033[1;32m%s\033[0m" % (mm_type + " test pass"))
-                        save_chip_data.save_data(MM_DNA, '', mm_type, ret)
-                    else:
-                        show_error()
-
+        # Step 1: MM burn
+        if (burn_mm(mm_type)):
+            # Step 2: MM test
+            if (test_mm(usbdev, endpin, endpout, mm_type)):
+                # Step 3: Save datas
+                save_chip_data.save_data(MM_DNA, MM_VER, mm_type, 0)
                 while (True):
-                    enter = raw_input("\033[1;33m请按回车键继续进行MM烧写和测试: \033[0m")
-                    if (len(enter) == 0):
+                    key = raw_input("\033[1;33m请按回车键继续进行%s烧写、测试和扫码: \033[0m" % mm_type)
+                    if (len(key) == 0):
                         break
-                break
+            else:
+                show_error()
+                while (True):
+                    key = raw_input("\033[1;33m测试失败，请输入回车键继续%s烧写、测试和扫码: \033[0m" % mm_type)
+                    if (len(key) == 0):
+                        break
         else:
             while (True):
-                zero = raw_input("\033[1;33m请输入0键并回车继续测试: \033[0m")
-                if (zero == '0'):
+                key = raw_input("\033[1;33m烧写失败，请输入回车键继续%s烧写、测试和扫码: \033[0m" % mm_type)
+                if (len(key) == 0):
                     break
