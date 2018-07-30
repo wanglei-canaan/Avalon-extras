@@ -43,8 +43,9 @@ def save_data(dna, qcode, chip, ver, type, result):
 
 if __name__ == '__main__':
     while True:
-	qcode = ''
+        qcode = ''
         while len(qcode) != 13:
             qcode = raw_input("\033[1;33m请扫码\033[0m")
+            print(len(qcode))
         save_data('123', qcode, 'mm', '8C', 'PMU851', 1)
         time.sleep(2)

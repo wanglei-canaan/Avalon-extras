@@ -32,7 +32,6 @@ def get_data_from_file(f):
 
 
 def upload():
-    print('upload start')
     files = get_valid_files()
     res = []
     for file in files:
@@ -54,7 +53,15 @@ def upload():
                 os.remove(file)
 
 
-if __name__ == '__main__':
+
+def check_run():
+    res = os.popen('ps aux|grep upload_chip_data').read()
+    if 'upload_chip_data.py' in res:
+        return
     while True:
         upload()
         time.sleep(config.config['time_delta'])
+
+
+if __name__ == '__main__':
+    check_run()
