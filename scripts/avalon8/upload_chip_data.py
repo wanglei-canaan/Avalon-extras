@@ -27,7 +27,8 @@ def get_data_from_file(f):
             line = line.strip()  # 去掉每行头尾空白
             res.append(json.loads(line))
     except Exception as e:
-        print(e)
+        # print(e)
+        pass
     return res
 
 
@@ -41,13 +42,14 @@ def upload():
 
     if len(res) > 0:
         jdata = json.dumps(res)  # 对数据进行JSON格式化编码
-        print(jdata)
+        # print(jdata)
         req = urllib2.Request('{}/api/chip_data'.format(config.config['log_server']), jdata)  # 生成页面请求的完整数据
         req.add_header('Content-Type', 'application/json')
         try:
             urllib2.urlopen(req)  # 发送页面请求
         except urllib2.URLError, e:
-            print(e)
+            # print(e)
+            pass
         else:
             for file in files:
                 os.remove(file)
@@ -56,7 +58,8 @@ def upload():
 
 def check_run():
     res = os.popen('ps aux|grep upload_chip_data').read()
-    if 'upload_chip_data.py' in res:
+    # print(res)
+    if res.count('upload_chip_data.py') > 1:
         return
     while True:
         upload()
